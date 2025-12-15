@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Cerdas Tic Tac Toe</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f0f0f0;
+            text-align: center;
+            margin-top: 40px;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        #game {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            gap: 10px;
+            justify-content: center;
+            margin: 20px auto;
+        }
+        .cell {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: 10px;
+            font-size: 2.5em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .cell:hover {
+            background: #d0e4ff;
+        }
+        #message {
+            margin: 15px;
+            font-weight: bold;
+            color: #333;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+            border: none;
+            background: #3498db;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        #scoreboard {
+            margin-top: 20px;
+            background: #fff;
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        #scoreboard span {
+            display: inline-block;
+            width: 100px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <h1>Game Cerdas Tic Tac Toe</h1>
+
+    <div>
+        Mode:
+        <select id="mode">
+            <option value="easy">Easy</option>
+            <option value="hard">Hard</option>
+        </select>
+        <button id="reset">Reset Game</button>
+    </div>
+    <div id="message">Memulai permainan...</div>
+    <div id="game"></div>
+    <div id="playAgain" style="display:none;">
+        <button id="btnPlayAgain">Main Lagi</button>
+    </div>
+
+    <div id="scoreboard">
+        <span>Menang: <strong id="winCount">0</strong></span>
+        <span>Seri: <strong id="drawCount">0</strong></span>
+        <span>Kalah: <strong id="loseCount">0</strong></span>
+    </div>
+
+    <script>
+    function initBoard() {
+        const game = document.getElementById("game");
+        game.innerHTML = "";
+        for (let i = 0; i < 9; i++) {
+            const cell = document.createElement("div");
+            cell.classList.add("cell");
+            cell.dataset.index = i;
+            cell.addEventListener("click", () => makeMove(i));
+            game.appendChild(cell);
+        }
+    }
+    
+    function loadGame() {
+    fetch("session_reset.php", {
+        method: "POST",
+        body: new URLSearchParams({ mode: document.getElementById("mode").value })
+    })
+    .then(res => res.json())
+    .then(data => updateUI(data));
+    }
+
+    function makeMove(index) {
+    fetch("process_move.php", {
+        method: "POST",
+        body: new URLSearchParams({ index })
+    })
+    .then(res => res.json())
+    .then(data => updateUI(data));
+    }
+
+    function updateUI(data) {
+        document.getElementById("message").textContent = data.message;
+        document.querySelectorAll(".cell").forEach((cell, i) => {
+            cell.textContent = data.board[i];
+            cell.style.pointerEvents = data.gameover ? "none" : "auto";
+        });
+
+        document.getElementById("playAgain").style.display = data.gameover ? "block" : "none";
+        document.getElementById("winCount").textContent = data.score.win;
+        document.getElementById("drawCount").textContent = data.score.draw;
+        document.getElementById("loseCount").textContent = data.score.lose;
+    }
+
+    document.getElementById("reset").addEventListener("click", loadGame);
+    document.getElementById("btnPlayAgain").addEventListener("click", loadGame);
+    
+    initBoard();
+    loadGame();
+    </script>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Game Tebak Angka</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            transition: background-color 0.3s; /* beda code */
+            overflow: hidden;
+        }
+        body.light {
+            background-color: #f0f0f0;
+            color: #000000;
+        }
+        body.dark {
+            background-color: #121212;
+            color: #ffffff;
+        }
+        button {
+            margin: 8px;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s; /*kenapa merah??*/
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .dark button {
+            background-color: #1e1e1e;
+            color: #ffffff;
+        }
+        .light button {
+            background-color: #ffffff;
+            color: #000000;
+        }
+        #output {
+            margin-top: 20px;
+            font-size: 18px;
+            text-align: center;
+        }
+        .ai-celebrate {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.5s ease-in;
+        }
+        .robot {
+            font-size: 80px;
+            animation: dance 1s infinite;
+        }
+        .celebrate-text {
+            font-size: 32px;
+            font-weight: bold;
+            margin-top: 10px;
+            animation: glow 1.5s infinite alternate;
+        }
+        @keyframes dance {
+            0% { transform: rotate(0deg) scale(1);}
+            25% { transform: rotate(-10deg) scale(1.1);}
+            50% { transform: rotate(10deg) scale(1);}
+            75% { transform: rotate(-10deg) scale(1.1);}
+            100% { transform: rotate(0deg) scale(1);}
+        }
+        @keyframes glow {
+            0% {color: #ff4081; text-shadow: 0 0 5px #ff4081;}
+            25% {color: #40c4ff; text-shadow: 0 0 10px #40c4ff;}
+            50% {color: #69f0ae; text-shadow: 0 0 15px #69f0ae;}
+            75% {color: #ffd740; text-shadow: 0 0 10px #ffd740;}
+            100% {color: #ff9100; text-shadow: 0 0 5px #ff9100;}
+        }
+        @keyframes fadeIn {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 AI Menebak Angka Kamu</h1>
+    <p>Pikirkan angka antara 1-100. AI akan mencoba menebak!</p>
+    <button id="themeBtn">🎚️ Ganti Tema</button>
+    <button id="startBtn">Mulai Permainan</button>
+    <div id="game" style="display:none;">
+        <p id="guessText"></p>
+        <button id="lowerBtn">Terlalu besar 🔽</button>
+        <button id="higherBtn">Terlalu kecil 🔼</button>
+        <button id="correctBtn">Benar ✅</button>
+    </div>
+    <div id="output"></div>
+    <div id="celebration" style="display: none;"></div>
+
+    <script>
+        // ======= Tema =======
+        const themeBtn = document.getElementById('themeBtn');
+        const body = document.body;
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        body.classList.add(savedTheme);
+
+        function toggleTheme() {
+            body.classList.toggle('dark');
+            body.classList.toggle('light');
+            const newTheme = body.classList.contains('dark') ? 'dark' : 'light';
+            localStorage.setItem('theme', newTheme);
+        }
+
+        themeBtn.addEventListener('click', toggleTheme);
+
+        // =======Logika AI Tebak Angka =======
+        let min = 1;
+        let max = 100;
+        let guess = 0;
+        let steps = 0
+
+        const startBtn = document.getElementById('startBtn');
+        const gameDiv = document.getElementById('game');
+        const guessText = document.getElementById('guessText');
+        const lowerBtn = document.getElementById('lowerBtn');
+        const higherBtn = document.getElementById('higherBtn');
+        const correctBtn = document.getElementById('correctBtn');
+        const outputDiv = document.getElementById('output'); // beda outputDiv
+        const celebrationDiv = document.getElementById('celebration'); // beda celebrationDiv
+
+        function makeGuess() {
+            guess = Math.floor((min + max) / 2);
+            steps++;
+            guessText.textContent = `Apakah angkamu ${guess}?`;
+        }
+
+        function resetCelebration() {
+            celebrationDiv.style.display = 'none';
+            celebrationDiv.innerHTML = '';
+        }
+
+        startBtn.addEventListener('click', () => {
+            min = 1;
+            max = 100;
+            steps = 0;
+            gameDiv.style.display = 'block';
+            outputDiv.textContent = '';
+            resetCelebration();
+            makeGuess();
+        });
+
+        lowerBtn.addEventListener('click', () => {
+            max = guess - 1;
+            if (min > max) {
+                guessText.textContent = 'Hmm, sepertinya ada kesalahan 😅';
+                return;
+            }
+            makeGuess();
+        });
+
+        higherBtn.addEventListener('click', () => {
+            min = guess + 1;
+            if (min > max) {
+                guessText.textContent = 'Hmm, sepertinya ada kesalahan 😅';
+                return;
+            }
+            makeGuess();
+        });
+
+        correctBtn.addEventListener('click', () => {
+            gameDiv.style.display = 'none';
+            guessText.textContent = `Yay! AI menebak angkamu ${guess} dalam ${steps} langkah! 🎉`;
+            outputDiv.textContent = `Main lagi? Klik "Mulai Permainan" untuk bermain lagi.!`;
+            showCelebration();
+        });
+
+        function showCelebration() {
+            celebrationDiv.style.display = 'flex';
+            celebrationDiv.classList.add('ai-celebrate');
+            celebrationDiv.innerHTML = `
+                <div class="robot">🤖</div>
+                <div class="celebrate-text">AI Berhasil Menebak!</div>
+            `;
+        }
+    </script>
+</body>
+</html>
